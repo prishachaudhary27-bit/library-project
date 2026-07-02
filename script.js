@@ -1,4 +1,33 @@
-const myLibrary=[];
+class Library {
+  constructor() {
+    this.books = [];
+  }
+
+  addBook(book) {
+    const isDuplicate = this.books.some(b =>
+      b.title.toLowerCase() === book.title.toLowerCase() &&
+      b.author.toLowerCase() === book.author.toLowerCase()
+    );
+    if (isDuplicate) {
+      throw new Error("Book with this title already exists");
+    }
+    this.books.push(book);
+  }
+
+  removeBook(id) {
+    this.books = this.books.filter(b => b.id !== id);
+  }
+
+  getBooks() {
+    return this.books;
+  }
+
+  findBook(id) {
+    return this.books.find(b => b.id === id);
+  }
+}
+
+const library = new Library();
 class Book{
     constructor(title,author,pages,read){
         this.title=title;
@@ -49,17 +78,13 @@ class Book{
 }
 
 function addBookToLibrary(title,author,pages,read){
-    const isduplicate = myLibrary.some(book => book.title.toLowerCase() === title.toLowerCase() && book.author.toLowerCase() === author.toLowerCase());
-    if(isduplicate){
-        throw new Error("Book with this title already exists");
-    }
     const newBook = new Book(title,author,pages,read);
-    myLibrary.push(newBook);
+    library.addBook(newBook);
 }
 function render(){
     const container = document.getElementById("library");
     container.innerHTML = "";
-    myLibrary.forEach(book => {
+    library.getBooks().forEach(book => {
     const card = document.createElement("div");
     card.classList.add("book-card");
     card.setAttribute("data-id", book.id);
@@ -69,7 +94,45 @@ function render(){
         <p>Author: ${book.author}</p>
         <p>Pages: ${book.pages}</p>
         <p>Status: ${book.read ? "Read" : "Not Read"}</p>
+        <button class="remove-btn">Remove</button>
     `;
     container.appendChild(card);
+    const removeBtn = card.querySelector(".remove-btn");
+    removeBtn.addEventListener("click", () => {
+      const idToRemove = card.getAttribute("data-id");
+      library.removeBook(idToRemove);
+      render();
+    });
 });
 }
+const dialog = document.getElementById("bookDialog");
+const newBookBtn = document.getElementById("newBookBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+const bookForm = document.getElementById("bookForm");
+
+newBookBtn.addEventListener("click", () => {
+  dialog.showModal();
+});
+
+cancelBtn.addEventListener("click", () => {
+  dialog.close();
+  bookForm.reset();
+});
+
+bookForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const title = document.getElementById("titleInput").value;
+  const author = document.getElementById("authorInput").value;
+  const pages = Number(document.getElementById("pagesInput").value);
+  const read = document.getElementById("readInput").checked;
+
+  try {
+    addBookToLibrary(title, author, pages, read);
+    render();
+    dialog.close();
+    bookForm.reset();
+  } catch (error) {
+    alert(error.message);
+  }
+}); 
